@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --bg: #121214;
+      --card: #1a1a1e;
+      --border: #2a2a30;
+      --text: #e1e1e6;
+      --muted: #a8a8b3;
+      --accent: #8257e5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 420px;
+      height: 600px;
+      max-height: 100vh; /* Para uso na Página Inicial */
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Título para quando estiver na Página Inicial */
+    #page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 20px;
+      display: none; /* Escondido por padrão, mostrado no JS */
+    }
+
+    /* Form para adicionar Feed */
+    .add-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    input, .rename-input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, .rename-input:focus { border-color: var(--accent); }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    button:hover { opacity: 0.9; }
+
+    /* Feed List */
+    #feed-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .feed-header {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin: 12px 0 6px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feed-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feed-title {
+      font-weight: 700;
+    }
+
+    .btn-icon {
+      background: transparent;
+      padding: 0;
+      color: var(--muted);
+      font-size: 14px;
+      width: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-icon:hover { color: var(--accent); opacity: 1; }
+    .btn-remove:hover { color: #e55151; }
+
+    .rename-container {
+      display: flex;
+      gap: 4px;
+      display: none; /* Escondido por padrão */
+    }
+
+    .item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 8px;
+      display: block;
+      text-decoration: none;
+      transition: transform 0.1s ease, border-color 0.1s;
+    }
+
+    .item:hover {
+      border-color: #3e3e48;
+      transform: translateY(-2px);
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+
+    .item-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="page-title">Meu RSS Personalizado</div>
+
+  <form class="add-bar" id="add-form">
+    <input type="url" id="feed-url" placeholder="https://exemplo.com/rss.xml" required />
+    <button type="submit">+</button>
+  </form>
+
+  <div id="feed-container">
+    <div class="status" id="status-msg">Carregando seus feeds...</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
