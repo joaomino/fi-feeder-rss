@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const updatedFeeds = [...data.feeds, { url: url, name: '' }];
+      // Salva com estado de colapsado padrão como false
+      const updatedFeeds = [...data.feeds, { url: url, name: '', collapsed: false }];
       chrome.storage.sync.set({ feeds: updatedFeeds }, () => {
         input.value = '';
         loadFeeds();
@@ -43,10 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = '';
 
-        for (const rawFeed of data.feeds) {
-          const feed = typeof rawFeed === 'string' ? { url: rawFeed, name: '' } : rawFeed;
+        const totalFeeds = data.feeds.length;
+
+        for (let index = 0; index < totalFeeds; index++) {
+          const rawFeed = data.feeds[index];
+          const feed = typeof rawFeed === 'string' ? { url: rawFeed, name: '', collapsed: false } : rawFeed;
           if (feed && feed.url) {
-            await fetchAndRenderFeed(feed);
+            await fetchAndRenderFeed(feed, index, totalFeeds);
           }
         }
       } catch (err) {
@@ -55,8 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function fetchAndRenderFeed(feed) {
+  async function fetchAndRenderFeed(feed, index, totalFeeds) {
     const limit = limitSelect ? parseInt(limitSelect.value, 10) : 5;
+    const isCollapsed = !!feed.collapsed;
 
     try {
       const res = await fetch(feed.url);
@@ -75,34 +80,53 @@ document.addEventListener('DOMContentLoaded', () => {
       const items = Array.from(xml.querySelectorAll('item, entry')).slice(0, limit);
 
       const section = document.createElement('div');
+      section.className = 'feed-section';
       
       section.innerHTML = `
         <div class="feed-header">
-          <span class="feed-title" title="Clique para renomear">${escapeHtml(displayName)}</span>
+          <div class="feed-title-container" title="Clique para expandir/recolher">
+            <span class="arrow-icon" style="transform: rotate(${isCollapsed ? '-90deg' : '0deg'})">▼</span>
+            <span class="feed-title">${escapeHtml(displayName)}</span>
+          </div>
           <div class="feed-actions">
-            <button class="btn-action btn-edit">renomear</button>
-            <button class="btn-action btn-remove">remover</button>
+            <button class="btn-action btn-move-up" title="Mover para cima" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
+            <button class="btn-action btn-move-down" title="Mover para baixo" ${index === totalFeeds - 1 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
+            <button class="btn-action btn-edit">✎</button>
+            <button class="btn-action btn-remove">✕</button>
           </div>
         </div>
         <div class="rename-box">
           <input type="text" class="rename-input" value="${escapeHtml(displayName)}">
           <button class="btn-save">OK</button>
         </div>
-        <div class="items-list"></div>
+        <div class="items-list ${isCollapsed ? 'collapsed' : ''}"></div>
       `;
 
       const renameBox = section.querySelector('.rename-box');
       const renameInput = section.querySelector('.rename-input');
       const itemsList = section.querySelector('.items-list');
+      const arrowIcon = section.querySelector('.arrow-icon');
+      const titleContainer = section.querySelector('.feed-title-container');
 
-      const toggleRename = () => {
+      // Expandir / Colapsar
+      titleContainer.addEventListener('click', () => {
+        const currentlyCollapsed = itemsList.classList.contains('collapsed');
+        if (currentlyCollapsed) {
+          itemsList.classList.remove('collapsed');
+          arrowIcon.style.transform = 'rotate(0deg)';
+        } else {
+          itemsList.classList.add('collapsed');
+          arrowIcon.style.transform = 'rotate(-90deg)';
+        }
+        toggleCollapseFeed(feed.url, !currentlyCollapsed);
+      });
+
+      // Abrir campo de renomear
+      section.querySelector('.btn-edit').addEventListener('click', () => {
         const isHidden = renameBox.style.display !== 'flex';
         renameBox.style.display = isHidden ? 'flex' : 'none';
         if (isHidden) renameInput.focus();
-      };
-
-      section.querySelector('.btn-edit').addEventListener('click', toggleRename);
-      section.querySelector('.feed-title').addEventListener('click', toggleRename);
+      });
 
       section.querySelector('.btn-save').addEventListener('click', () => {
         saveNewName(feed.url, renameInput.value.trim());
@@ -112,7 +136,15 @@ document.addEventListener('DOMContentLoaded', () => {
         removeFeed(feed.url);
       });
 
-      // Renderização de notícias
+      // Botões de Reordenar
+      if (index > 0) {
+        section.querySelector('.btn-move-up').addEventListener('click', () => moveFeed(index, index - 1));
+      }
+      if (index < totalFeeds - 1) {
+        section.querySelector('.btn-move-down').addEventListener('click', () => moveFeed(index, index + 1));
+      }
+
+      // Renderização de Notícias
       items.forEach(item => {
         const title = item.querySelector('title')?.textContent || 'Sem título';
         
@@ -122,12 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
           rawLink = linkTag.getAttribute('href') || linkTag.textContent || '';
         }
 
-        // LIMPEZA E TRATAMENTO DE URL
         let finalLink = '#';
         if (rawLink) {
           rawLink = rawLink.trim();
-          
-          // Se a URL do XML vem sem http:// ou https:// (Ex: cgi.br/noticia/...) adiciona o protocolo
           if (!rawLink.startsWith('http://') && !rawLink.startsWith('https://') && !rawLink.startsWith('/')) {
             rawLink = 'https://' + rawLink;
           }
@@ -167,14 +196,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       const section = document.createElement('div');
+      section.className = 'feed-section';
       section.innerHTML = `
         <div class="feed-header">
           <span class="feed-title" style="color: #e55151;">${escapeHtml(feed.name || feed.url)}</span>
           <div class="feed-actions">
-            <button class="btn-action btn-remove">remover</button>
+            <button class="btn-action btn-remove">✕</button>
           </div>
         </div>
-        <div class="status" style="color: #e55151; padding: 10px 0;">
+        <div class="status" style="color: #e55151; padding: 6px 0;">
           Erro: ${escapeHtml(err.message)}
         </div>
       `;
@@ -183,14 +213,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Alterna o estado recolhido/expandido no banco
+  function toggleCollapseFeed(url, isCollapsed) {
+    chrome.storage.sync.get({ feeds: [] }, (data) => {
+      const updatedFeeds = data.feeds.map(f => {
+        const currentUrl = typeof f === 'string' ? f : f.url;
+        if (currentUrl === url) {
+          return { ...(typeof f === 'string' ? { url: f } : f), collapsed: isCollapsed };
+        }
+        return f;
+      });
+      chrome.storage.sync.set({ feeds: updatedFeeds });
+    });
+  }
+
+  // Mover Posição na Lista
+  function moveFeed(fromIndex, toIndex) {
+    chrome.storage.sync.get({ feeds: [] }, (data) => {
+      const feeds = [...data.feeds];
+      const [movedFeed] = feeds.splice(fromIndex, 1);
+      feeds.splice(toIndex, 0, movedFeed);
+
+      chrome.storage.sync.set({ feeds: feeds }, () => loadFeeds());
+    });
+  }
+
   function saveNewName(url, newName) {
     chrome.storage.sync.get({ feeds: [] }, (data) => {
       const updatedFeeds = data.feeds.map(f => {
         const currentUrl = typeof f === 'string' ? f : f.url;
         if (currentUrl === url) {
-          return { url: currentUrl, name: newName };
+          return { ...(typeof f === 'string' ? { url: f } : f), name: newName };
         }
-        return typeof f === 'string' ? { url: f, name: '' } : f;
+        return f;
       });
 
       chrome.storage.sync.set({ feeds: updatedFeeds }, () => loadFeeds());
