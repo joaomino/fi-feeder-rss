@@ -15,152 +15,150 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      width: 420px;
-      height: 600px;
-      max-height: 100vh; /* Para uso na Página Inicial */
+      width: 100%;
+      min-width: 360px;
+      max-width: 420px;
+      height: 560px;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 16px;
+      padding: 12px;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
     }
 
-    /* Título para quando estiver na Página Inicial */
-    #page-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 20px;
-      display: none; /* Escondido por padrão, mostrado no JS */
-    }
-
-    /* Form para adicionar Feed */
+    /* Barra Superior */
     .add-bar {
       display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 6px;
+      margin-bottom: 12px;
     }
 
-    input, .rename-input {
-      flex: 1;
+    input, select {
       background: var(--card);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
     }
 
-    input:focus, .rename-input:focus { border-color: var(--accent); }
+    input[type="url"] { flex: 1; }
+    input:focus { border-color: var(--accent); }
 
     button {
       background: var(--accent);
       color: #fff;
       border: none;
-      padding: 10px 16px;
+      padding: 8px 12px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     button:hover { opacity: 0.9; }
 
-    /* Feed List */
+    /* Lista de Feeds */
     #feed-container {
-      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      overflow-y: auto;
     }
 
     .feed-header {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      margin: 12px 0 6px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-    }
-
-    .feed-title-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-top: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
     }
 
     .feed-title {
+      font-size: 12px;
       font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
     }
 
-    .btn-icon {
-      background: transparent;
-      padding: 0;
-      color: var(--muted);
-      font-size: 14px;
-      width: auto;
+    .feed-actions {
       display: flex;
-      align-items: center;
+      gap: 8px;
     }
 
-    .btn-icon:hover { color: var(--accent); opacity: 1; }
+    .btn-action {
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 0;
+      font-weight: normal;
+    }
+
+    .btn-action:hover { color: var(--text); }
     .btn-remove:hover { color: #e55151; }
 
-    .rename-container {
-      display: flex;
+    .rename-box {
+      display: none;
       gap: 4px;
-      display: none; /* Escondido por padrão */
+      margin-bottom: 6px;
     }
 
+    .rename-box input {
+      flex: 1;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    /* Cards de Notícias */
     .item {
       background: var(--card);
       border: 1px solid var(--border);
-      padding: 12px;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 6px;
       display: block;
       text-decoration: none;
-      transition: transform 0.1s ease, border-color 0.1s;
+      margin-top: 6px;
+      transition: border-color 0.15s ease;
     }
 
     .item:hover {
       border-color: #3e3e48;
-      transform: translateY(-2px);
     }
 
     .item-title {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--text);
-      line-height: 1.4;
-      margin-bottom: 6px;
+      line-height: 1.35;
+      margin-bottom: 4px;
     }
 
     .item-date {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
     }
 
     .status {
       text-align: center;
-      font-size: 14px;
+      font-size: 12px;
       color: var(--muted);
-      padding: 40px 0;
+      padding: 30px 0;
     }
   </style>
 </head>
 <body>
 
-  <div id="page-title">Meu RSS Personalizado</div>
-
   <form class="add-bar" id="add-form">
     <input type="url" id="feed-url" placeholder="https://exemplo.com/rss.xml" required />
+    <select id="item-limit" title="Itens por feed">
+      <option value="3">3</option>
+      <option value="5" selected>5</option>
+      <option value="10">10</option>
+      <option value="20">20</option>
+    </select>
     <button type="submit">+</button>
   </form>
 

@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Fi-Feeder RSS",
-  "version": "1.2",
+  "version": "1.3",
   "description": "Leitor RSS simples, rápido, seguro, com renomeação de feeds e modo Dark.",
   "permissions": [
     "storage",
     "sidePanel"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "*://*/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -16,7 +16,7 @@
   },
   "side_panel": {
     "default_path": "popup.html"
-  }
+  },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
